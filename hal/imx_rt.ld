@@ -20,8 +20,28 @@ SECTIONS
         . = ORIGIN(FLASH) + 0x2000;
         KEEP(*(.isr_vector))
         . = ALIGN(0x8);
-        *(.text*)
-        *(.rodata*)
+
+    *(EXCLUDE_FILE(
+        /* Exclude flash operation functions. */
+        */fsl_cache.o
+        *libc.a:lib_a-memcpy.o
+    ) .text)                 /* .text sections (code) */
+    *(EXCLUDE_FILE(
+        /* Exclude flash operation functions. */
+        */fsl_cache.o
+        *libc.a:lib_a-memcpy.o
+    ) .text*)                /* .text* sections (code) */
+    *(EXCLUDE_FILE(
+        /* Exclude flash operation functions. */
+        */fsl_cache.o
+        *libc.a:lib_a-memcpy.o
+    ) .rodata)               /* .rodata sections (constants, strings, etc.) */
+    *(EXCLUDE_FILE(
+        /* Exclude flash operation functions. */
+        */fsl_cache.o
+        *libc.a:lib_a-memcpy.o
+    ) .rodata*)              /* .rodata* sections (constants, strings, etc.) */
+
         *(.glue_7)               /* glue arm to thumb code */
         *(.glue_7t)              /* glue thumb to arm code */
         *(.eh_frame)
@@ -46,6 +66,14 @@ SECTIONS
     {
         _start_data = .;
         KEEP(*(.ramcode*))
+
+      /* Explicitly place flash operation functions in RAM. */
+      KEEP(*/fsl_cache.o(.text .text* .rodata .rodata*))
+      
+      /* Place memcpy in RAM as wolfboot uses memcpy in cojunction with BOOT ROM erase/write */
+      KEEP(*libc.a:lib_a-memcpy.o (.text*))
+      
+
         . = ALIGN(4);
         KEEP(*(.data*))
         . = ALIGN(4);
