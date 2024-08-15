@@ -877,7 +877,13 @@ int RAMFUNCTION hal_flash_write(uint32_t address, const uint8_t *data, int len)
      */
     asm volatile("cpsid i");
     for (i = 0; i < len; i+= CONFIG_FLASH_PAGE_SIZE) {
-        memcpy(wbuf, data + i, CONFIG_FLASH_PAGE_SIZE);
+        // memcpy(wbuf, data + i, CONFIG_FLASH_PAGE_SIZE);
+
+        for (uint32_t j = 0; j < CONFIG_FLASH_PAGE_SIZE / sizeof(uint32_t); j++) {
+            wbuf[j] = *(data + j + i);
+        }
+
+
         status = g_bootloaderTree->flexSpiNorDriver->program(0, FLEXSPI_CONFIG,
             (address + i) - FLASH_BASE, wbuf);
         /**
@@ -916,8 +922,13 @@ int RAMFUNCTION hal_flash_erase(uint32_t address, int len)
      * (note 4 p.279 in i.MX RT1060 Processor Reference Manual, Rev. 3, 07/2021)
      */
     asm volatile("cpsid i");
-    status = g_bootloaderTree->flexSpiNorDriver->erase(0, FLEXSPI_CONFIG,
-        address - FLASH_BASE, len);
+    // status = g_bootloaderTree->flexSpiNorDriver->erase(0, FLEXSPI_CONFIG,
+    //     address - FLASH_BASE, len);
+
+    for (int i = 0; i < len; i += CONFIG_FLASH_SECTOR_SIZE) {
+            status += g_bootloaderTree->flexSpiNorDriver->erase(0, FLEXSPI_CONFIG, i + (address - FLASH_BASE), CONFIG_FLASH_SECTOR_SIZE);
+    }
+
     /**
      * Flash is memory mapped, so the address range must be invalidated in data cache
      * to ensure coherency between flash and cache
