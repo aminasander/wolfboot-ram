@@ -911,7 +911,7 @@ void RAMFUNCTION hal_flash_lock(void)
 
 int RAMFUNCTION hal_flash_erase(uint32_t address, int len)
 {
-    status_t status;
+    status_t status = 0;
     hal_flash_init(); /* make sure g_bootloaderTree is set */
 #ifdef DEBUG_EXT_FLASH
     wolfBoot_printf("flash erase: addr 0x%x, len %d\n",
